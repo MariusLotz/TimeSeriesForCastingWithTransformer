@@ -9,5 +9,3 @@ for root, dirs, files in os.walk(script_path):
         subfolder_path = os.path.abspath(os.path.join(root, directory))
         sys.path.append(subfolder_path)
 print(sys.path)
-
-
