@@ -35,9 +35,11 @@ class MultiheadAttention(nn.Module):
         q = self.W_q(x)
         k = self.W_k(x)
         v = self.W_v(x)
+        
 
         # Split into multiple heads
         q = q.view(q.size(0), -1, self.num_heads, self.head_size).transpose(1, 2)
+        #print(q.shape)
         k = k.view(k.size(0), -1, self.num_heads, self.head_size).transpose(1, 2)
         v = v.view(v.size(0), -1, self.num_heads, self.head_size).transpose(1, 2)
 
@@ -46,7 +48,9 @@ class MultiheadAttention(nn.Module):
 
         # Concatenate and project back to the original size
         attention_based_v = attention_based_v.transpose(1, 2).contiguous().view(x.size(0), -1, self.input_size)
+        #print(attention_based_v.shape)
         output = self.W_o(attention_based_v)
-        return output
+    
+        return output.squeeze(dim=1)
 
 

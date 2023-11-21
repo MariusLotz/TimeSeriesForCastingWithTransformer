@@ -1,6 +1,9 @@
+import torch
+import torch.nn as nn
+
 class SimpleActivationLayer(nn.Module):
     def __init__(self, input_size, output_size, activation=nn.functional.relu, weight_init=None):
-        super(CustomLinear, self).__init__()
+        super(SimpleActivationLayer, self).__init__()
         self.weights = nn.Parameter(torch.randn(output_size, input_size))
         self.biases = nn.Parameter(torch.randn(output_size))
         self.activation = activation
