@@ -8,6 +8,7 @@ def attention_matrix(q, k, v, dropout=None, mask=None):
     if mask is not None:
         scores = scores.masked_fill(mask == 0, -1e9) # Durch eine Maske geblockte Einträge erhalten ein sehr hohen negativen Attention Score
     att_matrix = scores.softmax(dim=-1)
+    #print(att_matrix)
     #print(att_matrix.shape)
     if dropout is not None:
         att_matrix = dropout(att_matrix) # Dropout beim Training

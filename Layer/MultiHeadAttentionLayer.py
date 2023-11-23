@@ -4,7 +4,7 @@ import torch.nn.functional as F
 from Functions.Attention import attention as attention
 
 class MultiheadAttention(nn.Module):
-    def __init__(self, input_size, num_heads, dropout=0.1):
+    def __init__(self, input_size, num_heads, dropout=0.1, trainable=True):
         super(MultiheadAttention, self).__init__()
 
         assert input_size % num_heads == 0, "Input size must be divisible by the number of heads."
@@ -20,8 +20,11 @@ class MultiheadAttention(nn.Module):
 
         # Output projection
         self.W_o = nn.Linear(input_size, input_size, bias=False)
-
         self.dropout = nn.Dropout(p=dropout)
+
+        # Set requires_grad based on the trainable parameter
+        for param in self.parameters():
+            param.requires_grad = trainable
 
         # Parameter initialization
         nn.init.xavier_uniform_(self.W_q.weight)

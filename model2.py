@@ -1,13 +1,14 @@
-import torch
 import torch.nn as nn
 from Layer.MultiHeadAttentionLayer import MultiheadAttention
 from Layer.SimpleActivationLayer import SimpleActivationLayer
+
 class MyModel(nn.Module):
+    """MultiheadAttention here is not trainable"""
     def __init__(self, input_size=100, hidden_size1=1000, hidden_size2=100,  hidden_size3=10, output_size=1):
         super(MyModel, self).__init__()
 
         # Layers
-        self.att_layer = MultiheadAttention(input_size, 1)  # 1 head only
+        self.att_layer = MultiheadAttention(input_size, 1,trainable=False)  # 1 head only
         self.layer1 = SimpleActivationLayer(input_size, hidden_size1)
         self.layer2 = SimpleActivationLayer(hidden_size1, hidden_size2)
         self.layer3 = SimpleActivationLayer(hidden_size2, hidden_size3)
