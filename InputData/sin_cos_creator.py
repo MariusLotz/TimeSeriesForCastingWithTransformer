@@ -72,6 +72,19 @@ def sin_cos_creator6(num_points=100, number_basis_functions=13):
     cos_signal[0] = 0
     return cos_signal / np.sqrt(number_basis_functions)
 
+def sin_cos_creator7(num_points=133, number_basis_functions=13):
+    time = np.arange(num_points)
+    cos_signal = np.zeros(num_points)
+    for i in range(number_basis_functions):
+        amplitude  = random.uniform(0.5, 1)
+        frequence = random.uniform(3, 3.3)
+        phase = random.uniform(-0.13, 0.13)
+        cos_wave = amplitude * np.cos(2 * np.pi * (time + phase) * frequence)  # Cosine pattern
+        cos_signal = cos_signal + cos_wave
+    cos_signal[0] = 0
+    trend = [(0.0001 * x**2 - 0.000001*x**3) for x in range(num_points)]
+    return (cos_signal + trend) / np.sqrt(number_basis_functions)
+
 
 def grapfical_print():
     # Generate synthetic time series data
