@@ -31,7 +31,7 @@ def train_loader(input_data, target_data, batch_size):
     return train_loader
 
 
-def train_model(model, data_loader, optimizer, criterion, epochs=1000, patience=5):
+def train_model(model, data_loader, optimizer, criterion, epochs=1000, patience=11):
     torch.autograd.set_detect_anomaly(True)
     best_loss = float('inf')
     current_patience = 0
@@ -72,4 +72,4 @@ def training_model(name, Embedding):
 
 
 if __name__== "__main__":
-    training_model("model2_NoEmbedding", None)
+    training_model("model2_DWT2",DWT)
