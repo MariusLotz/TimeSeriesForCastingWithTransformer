@@ -14,6 +14,7 @@ def sin_cos_creator(num_points=25, number_basis_functions=10):
         cos_signal = cos_signal + cos_wave
     return cos_signal
 
+
 def sin_cos_creator2(num_points=25, number_basis_functions=100):
     time = np.arange(num_points)
     cos_signal = np.zeros(num_points)
@@ -25,6 +26,7 @@ def sin_cos_creator2(num_points=25, number_basis_functions=100):
         cos_signal = cos_signal + cos_wave
     return cos_signal / np.sqrt(number_basis_functions)
 
+
 def sin_cos_creator3(num_points=100, number_basis_functions=10000):
     time = np.arange(num_points)
     cos_signal = np.zeros(num_points)
@@ -35,6 +37,7 @@ def sin_cos_creator3(num_points=100, number_basis_functions=10000):
         cos_wave = amplitude * np.cos(2 * np.pi * (time + phase) * frequence)  # Cosine pattern
         cos_signal = cos_signal + cos_wave
     return cos_signal / np.sqrt(number_basis_functions)
+
 
 def sin_cos_creator4(num_points=100, number_basis_functions=100):
     time = np.arange(num_points)
@@ -48,6 +51,7 @@ def sin_cos_creator4(num_points=100, number_basis_functions=100):
     cos_signal[0] = 0
     return cos_signal / np.sqrt(number_basis_functions)
 
+
 def sin_cos_creator5(num_points=100, number_basis_functions=23):
     time = np.arange(num_points)
     cos_signal = np.zeros(num_points)
@@ -59,6 +63,7 @@ def sin_cos_creator5(num_points=100, number_basis_functions=23):
         cos_signal = cos_signal + cos_wave
     cos_signal[0] = 0
     return cos_signal / np.sqrt(number_basis_functions)
+
 
 def sin_cos_creator6(num_points=100, number_basis_functions=13):
     time = np.arange(num_points)
@@ -72,6 +77,7 @@ def sin_cos_creator6(num_points=100, number_basis_functions=13):
     cos_signal[0] = 0
     return cos_signal / np.sqrt(number_basis_functions)
 
+
 def sin_cos_creator7(num_points=133, number_basis_functions=13):
     time = np.arange(num_points)
     cos_signal = np.zeros(num_points)
@@ -82,8 +88,8 @@ def sin_cos_creator7(num_points=133, number_basis_functions=13):
         cos_wave = amplitude * np.cos(2 * np.pi * (time + phase) * frequence)  # Cosine pattern
         cos_signal = cos_signal + cos_wave
     cos_signal[0] = 0
-    trend = [(0.0001 * x**2 - 0.000001*x**3) for x in range(num_points)]
-    return (cos_signal + trend) / np.sqrt(number_basis_functions)
+    #trend = [(0.0001 * x**2 - 0.000001*x**3) for x in range(num_points)]
+    return (cos_signal) / np.sqrt(number_basis_functions)
 
 
 def grapfical_print():

@@ -24,7 +24,7 @@ if __name__=="__main__":
 # Plot the original signal, trend, and IMFs
 plt.figure(figsize=(10, 8))
 
-Plot the original signal
+#Plot the original signal
 plt.subplot(len(imfs) + 2, 1, 1)
 plt.plot(t, signal, label='Original Signal')
 plt.legend()
@@ -60,4 +60,4 @@ for i, imf in enumerate(imfs):
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
     # Save the figure in the same directory as the script
-    plt.savefig(os.path.join(script_dir, "example7.png"))
+    plt.savefig(os.path.join(script_dir, "example8#.png"))
