@@ -61,8 +61,7 @@ def get_local_extrema(signal, shorten_list=True):
 def signal_to_poly_coeff(signal, poly_type="Chebyshev"):
     # Get  Chebyshev coefficients
     degree = 5  # Choose the degree of the Chebyshev polynomial
-    cheb_coefficients = chebyshev.chebfit(x, signal, degree
-
+    cheb_coefficients = chebyshev.chebfit(x, signal, degree)
 
 
 
