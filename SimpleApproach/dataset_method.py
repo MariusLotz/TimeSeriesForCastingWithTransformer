@@ -1,3 +1,8 @@
+import pickle
+import os
+import matplotlib.pyplot as plt
+from statistics import median
+
 def dataset_prediction_method(dataset, input, pred_len):
     """
     Predicts a sequence of values for a given dataset, input, and prediction length.
@@ -30,7 +35,7 @@ def dataset_prediction_method(dataset, input, pred_len):
     return output
 
 
-def dataset_prediction_for_k(dataset, input, k):
+def dataset_prediction_for_k(dataset, input, k, fun=lambda x: x):
     """
     Predicts the value at time point k based on the given dataset and input.
 
@@ -50,21 +55,48 @@ def dataset_prediction_for_k(dataset, input, k):
         raise ValueError("Cant predict that time point k, because it is out of range!")
     
     # Calculating alpha's and beta:
-    alpha_vec = []
-    seq_sum_at_last_time_point = 0
-    for sequence in dataset:
-        alpha_i = calculate_alpha(input, sequence[:input_len])
-        alpha_vec.append(alpha_i)
-        seq_sum_at_last_time_point += sequence[-1] * alpha_i
-    beta = seq_sum_at_last_time_point / input[-1]
-    alpha_vec_adjusted = [alpha_i / beta for alpha_i in alpha_vec]
+    alpha_vec = [calculate_alpha(input, sequence[:input_len]) for sequence in dataset]
+    beta = calculate_beta(dataset, input, alpha_vec)
+    
+    alpha_vec_adjusted = [fun(alpha_i) / beta for alpha_i in alpha_vec]
     
     prediction = sum(dataset[i][k] * alpha_i_adjusted for i, alpha_i_adjusted in enumerate(alpha_vec_adjusted))
-
     return prediction
 
 
-def calculate_alpha(seq1, seq2):
+def calculate_beta(dataset, input, alpha_vec):
+    """
+    Berechnet den Beta-Wert für gegebenes Dataset, Input und Alpha-Vektor.
+
+    Parameters:
+    - dataset (list of lists): Das Dataset mit Sequenzen.
+    - input (list): Die Eingabesequenz.
+    - alpha_vec (list): Der Alpha-Vektor.
+
+    Returns:
+    - float: Der Durchschnitt der berechneten Beta-Werte.
+    """
+    Y = []         # Vektor Y
+    beta_vec = []  # Vektor der Beta-Werte
+
+    for k in range(len(input)):
+        sum_y = 0
+        for i in range(len(dataset)):
+            sum_y += dataset[i][k] * alpha_vec[i]
+
+        Y.append(sum_y)
+
+        # Berechne den Beta-Wert und füge ihn zum Beta-Vektor hinzu
+        beta_value = sum_y / (input[k]+0.00001)
+        beta_vec.append(beta_value)
+
+    # Berechne den Durchschnitt der Beta-Werte
+    median_beta = median(beta_vec)
+
+    return median_beta
+
+
+def calculate_alpha(seq1, seq2, filter_small_values=True, on_set=1e-9):
     """
     Calculates the scalar_product between two sequences of equal length.
 
@@ -79,14 +111,70 @@ def calculate_alpha(seq1, seq2):
         raise ValueError("Vectors need the same length!")
 
     result_sum = 0
+    energie1 = 0
+    energie2 = 0
     for v1, v2 in zip(seq1, seq2):
         result_sum += v1 * v2
+        energie1 += v1 * v1
+        energie2 += v2 * v2
 
-    return result_sum
+    if abs(result_sum) < 0.2*(abs(energie2) + abs(energie1)):
+        return result_sum * on_set
+    else:
+        print(result_sum)
+        return result_sum
 
 
 def test_plot():
+    """
+    Loads datasets, performs predictions, and plots the predicted sequence against the true sequence.
+    """
+    # Load the training dataset
+    with open("90000_training_sample_sin_cos_creator6.pkl", 'rb') as file:
+        training_dataset = pickle.load(file)
+
+    # Load the test dataset
+    with open("10000_test_sample_sin_cos_creator6.pkl", 'rb') as file:
+        test_inputset = pickle.load(file)
+
+    # Extract the first sequence from the test dataset
+    sample = 13
+    starting_point = 60
+    prediction_len = 100 - starting_point
+    input_sequence = test_inputset[sample][:starting_point]
+    true_sequence = test_inputset[sample][starting_point:]
+
+    # Perform predictions using the dataset_prediction_method
+    prediction = dataset_prediction_method(training_dataset[0:19999], input_sequence, pred_len=prediction_len)
+
     
+    # Plot the predicted sequence against the true sequence
+    plot_prediction_vs_true(prediction, true_sequence, "example_s13_starting60-2")
+
+
+def plot_prediction_vs_true(prediction, true_sequence, name):
+    """
+    Plots the predicted sequence against the true sequence.
+
+    Parameters:
+    - prediction (list): The predicted sequence of values.
+    - true_sequence (list): The true sequence of values.
+    """
+    plt.plot(range(len(true_sequence)), true_sequence, label='True Sequence', marker='o')
+    plt.plot(range(len(prediction)), prediction, label='Predicted Sequence', marker='x')
+    plt.xlabel('Time Point')
+    plt.ylabel('Value')
+    plt.title('Prediction vs True Sequence')
+    plt.legend()
+    # Save the plot in the specified folder
+    # Get the directory of the script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    save_path = os.path.join(script_dir, name)
+    plt.savefig(save_path)
+
+
+if __name__=="__main__":
+    test_plot()
 
 
 
