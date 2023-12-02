@@ -70,9 +70,9 @@ class PolyformerEmbedding(nn.Module):
 
                 while boolean:
                     coordinates[counter] = x[batch_idx, counter, 0]
-                    counter = counter + np.sqrt(self.signal_len)
+                    counter = counter + int(np.sqrt(self.signal_len))
 
-                    if counter + np.sqrt(self.signal_len) > self.signal_len - 1:
+                    if counter + int(np.sqrt(self.signal_len)) > self.signal_len - 1:
                         coefficients = p.chebyshev.chebfit(coordinates, deg=self.degree)
                         boolean = False
                         matrix[counter - int(np.sqrt(self.signal_len)):, :] = coefficients.reshape(1, -1)
@@ -87,18 +87,16 @@ def PolyformerEmbedding_test():
     Example test function for PolyformerEmbedding.
 
     """
-    input_tensor = torch.randn((4, 128, 2))
+    input_tensor = torch.randn((4, 16, 2))
     print(input_tensor)
-    polyformer = PolyformerEmbedding(input_tensor)
+    polyformer = PolyformerEmbedding(input_tensor, signal_len=16)
 
     output_tensor = polyformer.forward(input_tensor)
     print(output_tensor)
     print("Example Test Output Shape:", output_tensor.shape)
 
 
-
 if __name__=="__main__":
     PolyformerEmbedding_test()
-
 
 
