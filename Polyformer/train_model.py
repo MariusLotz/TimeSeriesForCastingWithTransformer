@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 import pickle
-from model_simple import MyModel as model_simple
+from model_simple import MyModel as model_simple2
 import numpy as np
 
 def pkl_to_train_loader(file_path, lowest_output_index, Embedding=None, batch_size=64):
@@ -39,7 +39,7 @@ def pkl_to_train_loader(file_path, lowest_output_index, Embedding=None, batch_si
 
 def train_loader(input_data, target_data, batch_size):
     """Creating Pytorch DataLoader for training"""
-    dataset = TensorDataset(torch.tensor(np.array(input_data)), torch.tensor(np.array(target_data)))
+    dataset = TensorDataset(torch.tensor(input_data), torch.tensor(target_data))
     train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
     return train_loader
 
@@ -60,7 +60,6 @@ def train_model(model, data_loader, optimizer, criterion, epochs=1000, patience=
         None
 
     """
-    torch.autograd.set_detect_anomaly(True)
     best_loss = float('inf')
     current_patience = 0
 
@@ -68,6 +67,9 @@ def train_model(model, data_loader, optimizer, criterion, epochs=1000, patience=
         total_loss = 0.0
 
         for inputs, targets in data_loader:
+            if torch.isnan(inputs).any() or torch.isnan(targets).any():
+                raise(ValueError, "Input data contains NaN values")
+                
             optimizer.zero_grad()
             outputs = model(inputs)
             # Ensure consistent data types
@@ -78,6 +80,7 @@ def train_model(model, data_loader, optimizer, criterion, epochs=1000, patience=
             # Now both outputs and targets have the same data type
             loss = criterion(outputs, targets)
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=2) # gradient clipping
             optimizer.step()
             total_loss += loss.item()
 
@@ -112,7 +115,7 @@ def training_model(name, Embedding=None):
     data_loader = pkl_to_train_loader("Polyformer/99999_training_sample_sin_cos_creator.pkl", 256, Embedding)
 
     # Create the model
-    our_model = model_simple()
+    our_model = model_simple2()
 
     # Set up optimizer and loss criterion
     optimizer = optim.Adam(our_model.parameters(), lr=0.001)
@@ -129,6 +132,5 @@ def training_model(name, Embedding=None):
     torch.save(our_model.state_dict(), model_path)
 
 
-
 if __name__== "__main__":
-    training_model("model_simple")
+    training_model("model1")
