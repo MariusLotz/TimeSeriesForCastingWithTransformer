@@ -57,7 +57,7 @@ class PolyformerEmbedding(nn.Module):
                 for j in range(matrix_size):
                     for i in range(matrix_size):
                         time = self.forecasting_grid[i + j * matrix_size]
-                        value = p.chebyshev.chebval(time, matrix[i])
+                        value = p.chebyshev.chebval(time, matrix[i].detach().numpy())
                         signal.append(value)
                 batch.append(signal)
        

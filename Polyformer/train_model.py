@@ -4,8 +4,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 import pickle
 from model_simple import MyModel as model_simple
-
-import pickle
+import numpy as np
 
 def pkl_to_train_loader(file_path, lowest_output_index, Embedding=None, batch_size=64):
     """
@@ -40,12 +39,10 @@ def pkl_to_train_loader(file_path, lowest_output_index, Embedding=None, batch_si
 
 def train_loader(input_data, target_data, batch_size):
     """Creating Pytorch DataLoader for training"""
-    dataset = TensorDataset(torch.tensor(input_data, dtype=torch.float32), torch.tensor(target_data, dtype=torch.float32))
+    dataset = TensorDataset(torch.tensor(np.array(input_data)), torch.tensor(np.array(target_data)))
     train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
     return train_loader
 
-
-import torch
 
 def train_model(model, data_loader, optimizer, criterion, epochs=1000, patience=11):
     """
@@ -73,6 +70,12 @@ def train_model(model, data_loader, optimizer, criterion, epochs=1000, patience=
         for inputs, targets in data_loader:
             optimizer.zero_grad()
             outputs = model(inputs)
+            # Ensure consistent data types
+            if outputs.dtype != targets.dtype:
+                # Convert model's output to the same data type as targets
+                outputs = outputs.to(targets.dtype)
+
+            # Now both outputs and targets have the same data type
             loss = criterion(outputs, targets)
             loss.backward()
             optimizer.step()
@@ -93,7 +96,7 @@ def train_model(model, data_loader, optimizer, criterion, epochs=1000, patience=
 
 
 
-def training_model(name, Embedding):
+def training_model(name, Embedding=None):
     """
     Train a PyTorch model using data loaded from a pickle file and save the trained model.
 
@@ -106,7 +109,7 @@ def training_model(name, Embedding):
 
     """
     # Load data from a pickle file and create a DataLoader
-    data_loader = pkl_to_train_loader("99999_training_sample_sin_cos_creator.pkl", 256, Embedding)
+    data_loader = pkl_to_train_loader("Polyformer/99999_training_sample_sin_cos_creator.pkl", 256, Embedding)
 
     # Create the model
     our_model = model_simple()
@@ -114,6 +117,9 @@ def training_model(name, Embedding):
     # Set up optimizer and loss criterion
     optimizer = optim.Adam(our_model.parameters(), lr=0.001)
     criterion = nn.MSELoss()
+
+    # Enable anomaly detection
+    torch.autograd.set_detect_anomaly(True)
 
     # Train the model
     train_model(our_model, data_loader, optimizer, criterion, epochs=1000)

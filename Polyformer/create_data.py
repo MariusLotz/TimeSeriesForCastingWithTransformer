@@ -4,7 +4,6 @@ import random
 import pickle
 import os
 
-
 def sin_cos_creator(num_points=512, number_basis_functions=7):
     time = np.arange(num_points)
     cos_signal = np.zeros(num_points)

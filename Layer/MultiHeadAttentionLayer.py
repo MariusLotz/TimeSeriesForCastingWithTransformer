@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from Functions.Attention import attention as attention
 
+
 class MultiheadAttention(nn.Module):
     def __init__(self, input_size, num_heads, dropout=0.1, trainable=True):
         super(MultiheadAttention, self).__init__()
