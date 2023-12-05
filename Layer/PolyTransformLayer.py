@@ -1,123 +1,87 @@
 import torch
 import torch.nn as nn
-import numpy.polynomial as p
 import numpy as np
-
-class PolyformerInverseEmbedding(nn.Module):
-    def __init__(self, x, time_grid, forecasting_length):
-        super(PolyformerInverseEmbedding, self).__init__()
-        self.time_grid = time_grid
-        self.forcasting_grid = time_grid + forecasting_length
-
-    def forward(self, x):
-        batch_size, matrix_size, matrix_size = x.size()
-        batch_tensor_list = []
-        for batch_idx in range(batch_size):
-            matrix = x[batch_idx]
-            matrix = []
-            for i in range(matrix_size):
-                time_points = [self.forcasting_grid[i + j * matrix_size] for j in range(matrix_size)]
-                pred_values = p.chebyshev.chebval(time_points, matrix[i,:])
-                matrix.append([[x, y] for x, y in zip(time_points, pred_values)])
-            matrix_tensor = torch.tensor(matrix)
-            right_order_matrix = torch.inverse(matrix_tensor)
-        batch_tensor_list.append(right_order_matrix)
-    
-        return batch_tensor_list
+import numpy.polynomial as p
 
 class PolyformerEmbedding(nn.Module):
     """
-    PolyformerEmbedding module for processing 3D input tensors.
-
-    Args:
-        x (torch.Tensor): Input tensor of shape (batch_size, signal_len, 2).
-        signal_len (int, optional): Length of the signal. Default is 128.
-
-    Raises:
-        ValueError: If the input tensor does not have the required dimensions.
+    PolyformerEmbedding is a PyTorch Module that transforms time-series data using Chebyshev polynomials.
 
     Attributes:
-        dim (int): Number of dimensions in the input tensor.
-        degree (float): Degree parameter for Chebyshev polynomial fitting.
-        signal_len (int): Length of the signal.
+        time_grid (torch.Tensor): Time grid for the input data.
+        forecasting_length (float): Length of forecasting to be applied.
+        forecasting_grid (list): Grid for forecasting based on time_grid and forecasting_length.
+        inverse (bool): If True, performs the inverse operation.
+        degree (int): Degree of the Chebyshev polynomials to be used.
 
     """
 
-    def __init__(self, x, signal_len=128):
+    def __init__(self, x, time_grid, forecasting_length, degree, inverse=False):
         super(PolyformerEmbedding, self).__init__()
-        self.dim = x.dim()
-        self.signal_len = signal_len
-        self.degree = int(np.sqrt(signal_len) - 1)
-        print(self.degree)
-       
-
-        if self.dim != 3:
-            raise ValueError("Input should have dim 3 but has different dimension")
-
-        if x.size(1) != self.signal_len or x.size(2) != 2:
-            raise ValueError("Dimension 1 should be {}, and dimension 2 should be 2!".format(signal_len))
+        self.time_grid = time_grid
+        self.forecasting_length = forecasting_length
+        self.forecasting_grid = [t + self.forecasting_length for t in self.time_grid]
+        self.inverse = inverse
+        self.degree = degree
 
     def forward(self, x):
         """
-        Forward pass for PolyformerEmbedding.
+        Forward pass of the PolyformerEmbedding.
 
         Args:
-            x (torch.Tensor): Input tensor of shape (batch_size, signal_len, 2).
+            x (torch.Tensor): Input tensor representing time-series data.
 
         Returns:
-            torch.Tensor: Transformed tensor based on Chebyshev polynomial fitting.
+            torch.Tensor: Transformed tensor based on Chebyshev polynomials.
 
+        AND vice versa
         """
-        batch_size = x.size(0)
-        matrix_size = int(np.sqrt(self.signal_len))
-        batch_tensor_list = []
-        for batch_idx in range(batch_size):
-            signal = x[batch_idx]
-            for i in range(matrix_size):
-                part_signal = []
-                tensor_list = []
+        if not self.inverse:
+            matrix_size = int(np.sqrt(x.size(1)))
+            batch = []
+            for batch_index in range(x.size(0)):
+                signal = x[batch_index]
+                matrix = []
+                for i in range(matrix_size):
+                    values = [signal[i + j * matrix_size] for j in range(matrix_size)]
+                    times = [self.time_grid[i + j * matrix_size] for j in range(matrix_size)]
+                    coeffs = p.chebyshev.chebfit(times, values, self.degree)
+                    matrix.append(coeffs)
+                batch.append(matrix)
+        else:
+            matrix_size = x.size(1)
+            batch = []
+            for batch_index in range(x.size(0)):
+                matrix = x[batch_index]
+                signal = []
                 for j in range(matrix_size):
-                    index = i + j * matrix_size
-                    part_signal.append(signal[index])
-            tensor_list.append(torch.tensor(p.chebyshev.chebfit(part_signal[:][0], part_signal[:][1], self.degree)))
-            batch_tensor_list.append(torch.stack(tensor_list, dim=0))
-        batch_matrix_tensor = torch.stack(batch_tensor_list, dim=0)
+                    for i in range(matrix_size):
+                        time = self.forecasting_grid[i + j * matrix_size]
+                        value = p.chebyshev.chebval(time, matrix[i])
+                        signal.append(value)
+                batch.append(signal)
+       
+        return torch.tensor(batch)
 
-        return batch_matrix_tensor
-    
 
 def PolyformerEmbedding_test():
     """
     Example test function for PolyformerEmbedding.
 
     """
+    time_grid = torch.tensor([1, 2, 3, 4])
+    values = torch.tensor([[1, 2, 3, 4], [1, 2, 3, 4]])
+    print(values)
 
-    time_grids = torch.tensor([[1,2,3,4], [5,6,7,8]])
-    values = torch.tensor([[1,2,3,4,], [1,2,3,4]])
+    polyformer = PolyformerEmbedding(values, time_grid, 0, 1)
 
-    input_tensor = torch.cat([torch.unsqueeze(time_grids, 2), torch.unsqueeze(values, 2)], dim=2)
+    output = polyformer.forward(values)
+    # print(output)
 
-    print("Input tensor size:", input_tensor.size())
-    print("Input tensor:")
-    print(input_tensor)
+    reverse_polyformer = PolyformerEmbedding(output, time_grid, 0.5, 1, True)
+    reverse_tensor = reverse_polyformer.forward(output)
 
-    polyformer = PolyformerEmbedding(input_tensor, signal_len=4)
-
-    output_tensor = polyformer.forward(input_tensor)
-    print("Output tensor size:", output_tensor.size())
-    print("Output tensor:")
-    print(output_tensor)
-
-    reverse_polyformer = PolyformerInverseEmbedding(output_tensor, time_grids, 0)
-    reverse_tensor = reverse_polyformer.forward(output_tensor)
-
-    print("reverse_tensor:", reverse_tensor.size())
-    print("reverse_tensor:")
     print(reverse_tensor)
 
-
-
-if __name__=="__main__":
+if __name__ == "__main__":
     PolyformerEmbedding_test()
-
-
