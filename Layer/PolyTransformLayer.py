@@ -16,7 +16,7 @@ class PolyformerEmbedding(nn.Module):
 
     """
 
-    def __init__(self, x, time_grid, forecasting_length, degree, inverse=False):
+    def __init__(self, time_grid, forecasting_length, degree, inverse=False):
         super(PolyformerEmbedding, self).__init__()
         self.time_grid = time_grid
         self.forecasting_length = forecasting_length
